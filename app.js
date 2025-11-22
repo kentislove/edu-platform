@@ -64,6 +64,27 @@ function setupEventListeners() {
     });
 
     document.getElementById('refresh-btn').addEventListener('click', loadContent);
+
+    // Navigation Menu
+    document.querySelectorAll('.nav-item').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const page = e.target.dataset.page;
+
+            // Update Active State
+            document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
+            e.target.classList.add('active');
+
+            // Show Page
+            if (page === 'dashboard') {
+                app.dashboardContainer.classList.remove('hidden');
+                document.getElementById('about-container').classList.add('hidden');
+            } else if (page === 'about') {
+                app.dashboardContainer.classList.add('hidden');
+                document.getElementById('about-container').classList.remove('hidden');
+            }
+        });
+    });
 }
 
 function checkAuth() {
@@ -77,15 +98,26 @@ function checkAuth() {
 function showAuth() {
     app.authContainer.classList.remove('hidden');
     app.dashboardContainer.classList.add('hidden');
+    document.getElementById('about-container').classList.add('hidden');
+
     app.userGreeting.classList.add('hidden');
     app.logoutBtn.classList.add('hidden');
+    document.getElementById('main-nav').classList.add('hidden'); // Hide Nav
 }
 
 function showDashboard() {
     app.authContainer.classList.add('hidden');
     app.dashboardContainer.classList.remove('hidden');
+    document.getElementById('about-container').classList.add('hidden');
+
     app.userGreeting.classList.remove('hidden');
     app.logoutBtn.classList.remove('hidden');
+    document.getElementById('main-nav').classList.remove('hidden'); // Show Nav
+
+    // Reset Nav Active State
+    document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
+    document.querySelector('[data-page="dashboard"]').classList.add('active');
+
     app.usernameDisplay.textContent = currentUser.name;
 
     loadContent();

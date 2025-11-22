@@ -4,20 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Educational Platform</title>
+    <title>EduPlatform - 線上學習首選</title>
     <link rel="stylesheet" href="styles.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Google Sign-In Script -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
-        // Define callback early to prevent "callback is not a function" error
         function handleGoogleCallback(response) {
-            // Pass to app.js handler
             if (window.onGoogleLogin) {
                 window.onGoogleLogin(response);
-            } else {
-                console.error("Application logic not loaded yet.");
             }
         }
     </script>
@@ -28,69 +24,87 @@
         <!-- Navigation -->
         <nav class="navbar">
             <div class="logo">EduPlatform</div>
+
+            <!-- Main Navigation Links (Visible when logged in) -->
+            <div id="main-nav" class="nav-menu hidden">
+                <a href="#" class="nav-item active" data-page="dashboard">我的課程</a>
+                <a href="#" class="nav-item" data-page="about">關於我們</a>
+            </div>
+
             <div class="nav-links">
-                <span id="user-greeting" class="hidden">Hello, <span id="username-display"></span></span>
-                <button id="logout-btn" class="hidden">登出</button>
+                <span id="user-greeting" class="hidden">Hi, <span id="username-display"></span></span>
+                <button id="logout-btn" class="btn-secondary hidden"
+                    style="padding: 0.5rem 1rem; font-size: 0.9rem;">登出</button>
             </div>
         </nav>
 
-        <!-- Auth Section -->
-        <div id="auth-container" class="container">
-            <div class="auth-box">
-                <h2>歡迎回來</h2>
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="login">登入</button>
-                    <button class="tab-btn" data-tab="register">註冊</button>
+        <!-- Auth Section with Hero -->
+        <div id="auth-container">
+            <section class="hero">
+                <h1>開啟您的學習之旅</h1>
+                <p>隨時隨地，掌握最新技能。加入我們，探索無限可能。</p>
+
+                <div class="auth-box">
+                    <h2>歡迎回來</h2>
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="login">登入</button>
+                        <button class="tab-btn" data-tab="register">註冊</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="login-form" class="auth-form">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="login-email" placeholder="name@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>密碼</label>
+                            <input type="password" id="login-password" placeholder="請輸入密碼" required>
+                        </div>
+                        <button type="submit" class="btn-primary">立即登入</button>
+
+                        <div class="divider">或使用其他方式</div>
+
+                        <!-- Google Sign-In Button -->
+                        <div id="g_id_onload"
+                            data-client_id="35361219820-07eqjrdpm2jqi6dvv8rvosbl12a3r4ee.apps.googleusercontent.com"
+                            data-callback="handleGoogleCallback" data-auto_prompt="false">
+                        </div>
+                        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline"
+                            data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="center"
+                            data-width="100%">
+                        </div>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="register-form" class="auth-form hidden">
+                        <div class="form-group">
+                            <label>姓名</label>
+                            <input type="text" id="reg-name" placeholder="您的稱呼" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="reg-email" placeholder="name@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>密碼</label>
+                            <input type="password" id="reg-password" placeholder="設定密碼" required>
+                        </div>
+                        <button type="submit" class="btn-primary">免費註冊</button>
+                    </form>
+                    <p id="auth-message" class="message"
+                        style="text-align: center; margin-top: 1rem; color: var(--primary);"></p>
                 </div>
-
-                <!-- Login Form -->
-                <form id="login-form" class="auth-form">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="login-email" required>
-                    </div>
-                    <div class="form-group">
-                        <label>密碼</label>
-                        <input type="password" id="login-password" required>
-                    </div>
-                    <button type="submit" class="btn-primary">登入</button>
-
-                    <div class="divider">或</div>
-
-                    <!-- Google Sign-In Button Container -->
-                    <div id="g_id_onload"
-                        data-client_id="35361219820-07eqjrdpm2jqi6dvv8rvosbl12a3r4ee.apps.googleusercontent.com"
-                        data-callback="handleGoogleCallback" data-auto_prompt="false">
-                    </div>
-                    <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline"
-                        data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left">
-                    </div>
-                </form>
-
-                <!-- Register Form -->
-                <form id="register-form" class="auth-form hidden">
-                    <div class="form-group">
-                        <label>姓名</label>
-                        <input type="text" id="reg-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="reg-email" required>
-                    </div>
-                    <div class="form-group">
-                        <label>密碼</label>
-                        <input type="password" id="reg-password" required>
-                    </div>
-                    <button type="submit" class="btn-primary">註冊</button>
-                </form>
-                <p id="auth-message" class="message"></p>
-            </div>
+            </section>
         </div>
 
         <!-- Dashboard Section -->
         <div id="dashboard-container" class="container hidden">
             <header class="dashboard-header">
-                <h1>我的課程</h1>
+                <div>
+                    <h1>我的課程</h1>
+                    <p style="color: var(--text-light);">繼續您的學習進度</p>
+                </div>
                 <button id="refresh-btn" class="btn-secondary">重新整理</button>
             </header>
 
@@ -99,17 +113,54 @@
             </div>
         </div>
 
+        <!-- About Section (New Page) -->
+        <div id="about-container" class="container hidden">
+            <header class="dashboard-header">
+                <div>
+                    <h1>關於我們</h1>
+                    <p style="color: var(--text-light);">了解 EduPlatform 的教育理念</p>
+                </div>
+            </header>
+
+            <div class="about-content"
+                style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border);">
+                <h2 style="margin-bottom: 1rem; color: var(--text-dark);">致力於提供最好的線上學習體驗</h2>
+                <p style="margin-bottom: 1.5rem; color: var(--text);">
+                    EduPlatform 成立於 2024 年，我們的使命是讓高品質的教育資源觸手可及。我們結合了頂尖的師資與先進的串流技術，
+                    為您帶來流暢、互動且高效的學習環境。
+                </p>
+
+                <div class="features-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                    <div class="feature-item">
+                        <h3 style="color: var(--primary); margin-bottom: 0.5rem;">專業師資</h3>
+                        <p>來自全球各地的行業專家親自授課。</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3 style="color: var(--primary); margin-bottom: 0.5rem;">彈性學習</h3>
+                        <p>隨時隨地，依照您的步調進行學習。</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3 style="color: var(--primary); margin-bottom: 0.5rem;">實戰導向</h3>
+                        <p>課程內容著重於實際應用與職場技能。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Video Modal -->
         <div id="video-modal" class="modal hidden">
             <div class="modal-content">
-                <span class="close-modal">&times;</span>
-                <h2 id="modal-title"></h2>
+                <div class="modal-header">
+                    <h2 id="modal-title">課程標題</h2>
+                    <span class="close-modal">&times;</span>
+                </div>
                 <div class="video-wrapper">
                     <iframe id="video-player" src="" frameborder="0" allowfullscreen></iframe>
                 </div>
                 <div id="lock-message" class="lock-overlay hidden">
-                    <h3>此內容需要付費</h3>
-                    <p>請聯絡管理員開通權限。</p>
+                    <h3>🔒 此內容僅限 VIP 會員</h3>
+                    <p>請升級您的帳戶以觀看完整內容。</p>
                 </div>
             </div>
         </div>

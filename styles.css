@@ -1,13 +1,19 @@
 :root {
-    --primary: #2563eb;
-    --primary-dark: #1d4ed8;
+    /* TutorABC-inspired Palette */
+    --primary: #dc2626;
+    /* Brand Red */
+    --primary-hover: #b91c1c;
+    --secondary: #1e293b;
+    /* Dark Slate */
     --bg: #f8fafc;
     --surface: #ffffff;
-    --text: #1e293b;
-    --text-light: #64748b;
+    --text: #334155;
+    --text-dark: #0f172a;
     --border: #e2e8f0;
-    --danger: #ef4444;
-    --success: #22c55e;
+    --success: #10b981;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -17,185 +23,339 @@
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: var(--bg);
     color: var(--text);
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 0 2rem;
 }
 
 .hidden {
     display: none !important;
 }
 
-/* Navbar */
+/* --- Navbar --- */
 .navbar {
-    background: var(--surface);
-    padding: 1rem 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    height: 70px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 0 5%;
 }
 
 .logo {
-    font-weight: 700;
-    font-size: 1.5rem;
+    font-weight: 800;
+    font-size: 1.75rem;
     color: var(--primary);
+    letter-spacing: -0.5px;
 }
 
 .nav-links {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     align-items: center;
 }
 
-/* Auth Box */
+.nav-menu {
+    display: flex;
+    gap: 1rem;
+    margin-left: 3rem;
+    margin-right: auto;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.nav-item:hover {
+    background: #f1f5f9;
+    color: var(--primary);
+}
+
+.nav-item.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+#user-greeting {
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+
+/* --- Hero Section (New) --- */
+.hero {
+    margin-top: 70px;
+    /* Offset fixed navbar */
+    background: linear-gradient(135deg, #fff1f2 0%, #fff 100%);
+    padding: 4rem 2rem;
+    text-align: center;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.hero p {
+    font-size: 1.25rem;
+    color: var(--text);
+    max-width: 600px;
+    margin-bottom: 2rem;
+}
+
+/* --- Auth Box --- */
+.auth-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    /* If inside hero, remove margin-top */
+}
+
 .auth-box {
     background: var(--surface);
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
-    margin: 4rem auto;
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 420px;
+    border: 1px solid var(--border);
+}
+
+.auth-box h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--text-dark);
+    font-size: 1.5rem;
 }
 
 .tabs {
     display: flex;
     margin-bottom: 2rem;
-    border-bottom: 1px solid var(--border);
+    background: #f1f5f9;
+    padding: 0.25rem;
+    border-radius: 0.75rem;
 }
 
 .tab-btn {
     flex: 1;
-    padding: 1rem;
+    padding: 0.75rem;
     border: none;
     background: none;
     cursor: pointer;
     font-weight: 600;
-    color: var(--text-light);
+    color: var(--text);
+    border-radius: 0.5rem;
+    transition: all 0.2s;
 }
 
 .tab-btn.active {
+    background: var(--surface);
     color: var(--primary);
-    border-bottom: 2px solid var(--primary);
+    box-shadow: var(--shadow-sm);
 }
 
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
 }
 
 .form-group input {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.875rem;
     border: 1px solid var(--border);
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     font-size: 1rem;
+    transition: border-color 0.2s;
 }
 
-.btn-primary,
-.btn-secondary {
-    width: 100%;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.2s;
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .btn-primary {
+    width: 100%;
+    padding: 0.875rem;
     background: var(--primary);
     color: white;
-}
-
-.btn-secondary {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
+    border: none;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
 .btn-primary:hover {
-    opacity: 0.9;
+    background: var(--primary-hover);
 }
 
 .divider {
+    display: flex;
+    align-items: center;
     text-align: center;
-    margin: 1rem 0;
-    color: var(--text-light);
+    margin: 1.5rem 0;
+    color: var(--text);
     font-size: 0.875rem;
 }
 
-/* Dashboard */
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border);
+}
+
+.divider::before {
+    margin-right: .5em;
+}
+
+.divider::after {
+    margin-left: .5em;
+}
+
+/* --- Dashboard --- */
+#dashboard-container {
+    margin-top: 100px;
+    /* Offset navbar */
+    padding-bottom: 4rem;
+}
+
 .dashboard-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
+}
+
+.dashboard-header h1 {
+    font-size: 2rem;
+    color: var(--text-dark);
+}
+
+.btn-secondary {
+    padding: 0.75rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dark);
+    border-radius: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #f1f5f9;
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2.5rem;
 }
 
 .card {
     background: var(--surface);
-    border-radius: 1rem;
+    border-radius: 1.25rem;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s;
-    cursor: pointer;
-    position: relative;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
 }
 
 .card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
 }
 
 .card-thumb {
-    height: 180px;
-    background-color: #cbd5e1;
+    height: 200px;
+    background-color: #e2e8f0;
     background-size: cover;
     background-position: center;
     position: relative;
 }
 
 .card-body {
-    padding: 1rem;
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .card-title {
-    font-weight: 600;
+    font-size: 1.25rem;
+    font-weight: 700;
     margin-bottom: 0.5rem;
+    color: var(--text-dark);
+    line-height: 1.4;
+}
+
+.card p {
+    font-size: 0.9rem;
+    color: var(--text);
+    margin-top: auto;
 }
 
 .badge {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 2rem;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .badge.locked {
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(15, 23, 42, 0.9);
     color: white;
+    backdrop-filter: blur(4px);
 }
 
 .badge.unlocked {
@@ -203,51 +363,40 @@ body {
     color: white;
 }
 
-/* Modal */
+/* --- Modal --- */
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(15, 23, 42, 0.9);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(5px);
 }
 
 .modal-content {
     background: var(--surface);
-    width: 90%;
-    max-width: 900px;
-    padding: 2rem;
-    border-radius: 1rem;
-    position: relative;
+    width: 95%;
+    max-width: 1000px;
+    padding: 0;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    box-shadow: 2xl;
 }
 
-.close-modal {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    font-size: 2rem;
-    cursor: pointer;
-    line-height: 1;
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.video-wrapper {
-    position: relative;
-    padding-bottom: 56.25%;
-    /* 16:9 */
-    height: 0;
-    background: black;
-    margin-top: 1rem;
-}
-
-.video-wrapper iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
+.modal-header h2 {
     width: 100%;
     height: 100%;
 }
@@ -258,11 +407,16 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.85);
     color: white;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
+}
+
+.lock-overlay h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
 }
