@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educational Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Sign-In Script -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        // Define callback early to prevent "callback is not a function" error
+        function handleGoogleCallback(response) {
+            // Pass to app.js handler
+            if (window.onGoogleLogin) {
+                window.onGoogleLogin(response);
+            } else {
+                console.error("Application logic not loaded yet.");
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="logo">EduPlatform</div>
+            <div class="nav-links">
+                <span id="user-greeting" class="hidden">Hello, <span id="username-display"></span></span>
+                <button id="logout-btn" class="hidden">登出</button>
+            </div>
+        </nav>
+
+        <!-- Auth Section -->
+        <div id="auth-container" class="container">
+            <div class="auth-box">
+                <h2>歡迎回來</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="login">登入</button>
+                    <button class="tab-btn" data-tab="register">註冊</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>密碼</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn-primary">登入</button>
+
+                    <div class="divider">或</div>
+
+                    <!-- Google Sign-In Button Container -->
+                    <div id="g_id_onload"
+                        data-client_id="35361219820-07eqjrdpm2jqi6dvv8rvosbl12a3r4ee.apps.googleusercontent.com"
+                        data-callback="handleGoogleCallback" data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline"
+                        data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left">
+                    </div>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="auth-form hidden">
+                    <div class="form-group">
+                        <label>姓名</label>
+                        <input type="text" id="reg-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="reg-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>密碼</label>
+                        <input type="password" id="reg-password" required>
+                    </div>
+                    <button type="submit" class="btn-primary">註冊</button>
+                </form>
+                <p id="auth-message" class="message"></p>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-container" class="container hidden">
+            <header class="dashboard-header">
+                <h1>我的課程</h1>
+                <button id="refresh-btn" class="btn-secondary">重新整理</button>
+            </header>
+
+            <div id="content-grid" class="grid">
+                <!-- Content items will be injected here -->
+            </div>
+        </div>
+
+        <!-- Video Modal -->
+        <div id="video-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2 id="modal-title"></h2>
+                <div class="video-wrapper">
+                    <iframe id="video-player" src="" frameborder="0" allowfullscreen></iframe>
+                </div>
+                <div id="lock-message" class="lock-overlay hidden">
+                    <h3>此內容需要付費</h3>
+                    <p>請聯絡管理員開通權限。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
