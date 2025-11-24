@@ -101,10 +101,15 @@ function setupEventListeners() {
 
 async function callApi(action, data = {}) {
     try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, ...data })
+        // 將數據編碼為 Base64
+        const jsonStr = JSON.stringify({ action, ...data });
+        const base64Data = btoa(unescape(encodeURIComponent(jsonStr)));
+
+        // 使用 GET 請求避免 CORS 問題
+        const url = `${API_URL}?action=${action}&data=${encodeURIComponent(base64Data)}`;
+
+        const response = await fetch(url, {
+            method: 'GET'
         });
 
         return await response.json();
