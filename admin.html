@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPlatform - 管理後台</title>
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="admin-app">
+        <!-- Login Page -->
+        <div id="login-page" class="page">
+            <div class="login-container">
+                <div class="login-box">
+                    <div class="logo-section">
+                        <h1>🎓 EduPlatform</h1>
+                        <p>管理後台</p>
+                    </div>
+
+                    <form id="admin-login-form">
+                        <div class="form-group">
+                            <label>管理員 Email</label>
+                            <input type="email" id="admin-email" placeholder="admin@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>密碼</label>
+                            <input type="password" id="admin-password" placeholder="請輸入密碼" required>
+                        </div>
+                        <button type="submit" class="btn-primary">登入管理後台</button>
+                        <p id="login-message" class="message"></p>
+                    </form>
+
+                    <div class="login-footer">
+                        <a href="index.html">← 返回用戶前台</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page hidden">
+            <!-- Navbar -->
+            <nav class="admin-navbar">
+                <div class="navbar-left">
+                    <h2>🎓 EduPlatform 管理後台</h2>
+                </div>
+                <div class="navbar-right">
+                    <span id="admin-name">管理員</span>
+                    <button id="admin-logout-btn" class="btn-secondary">登出</button>
+                </div>
+            </nav>
+
+            <!-- Sidebar -->
+            <div class="admin-layout">
+                <aside class="sidebar">
+                    <nav class="sidebar-nav">
+                        <a href="#" class="nav-link active" data-view="users">
+                            <span class="icon">👥</span>
+                            <span>用戶管理</span>
+                        </a>
+                        <a href="#" class="nav-link" data-view="content">
+                            <span class="icon">🎬</span>
+                            <span>內容管理</span>
+                        </a>
+                        <a href="#" class="nav-link" data-view="permissions">
+                            <span class="icon">🔐</span>
+                            <span>權限管理</span>
+                        </a>
+                        <a href="#" class="nav-link" data-view="stats">
+                            <span class="icon">📊</span>
+                            <span>統計資訊</span>
+                        </a>
+                    </nav>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="main-content">
+                    <!-- Users View -->
+                    <div id="users-view" class="view active">
+                        <div class="view-header">
+                            <h2>用戶管理</h2>
+                            <div class="search-box">
+                                <input type="text" id="user-search" placeholder="搜尋用戶 (Email/姓名)">
+                                <button class="btn-secondary" id="search-btn">🔍 搜尋</button>
+                            </div>
+                        </div>
+
+                        <div class="stats-cards">
+                            <div class="stat-card">
+                                <div class="stat-value" id="total-users">0</div>
+                                <div class="stat-label">總用戶數</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="paid-users">0</div>
+                                <div class="stat-label">付費用戶</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="active-users">0</div>
+                                <div class="stat-label">活躍用戶</div>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>姓名</th>
+                                        <th>註冊方式</th>
+                                        <th>付費狀態</th>
+                                        <th>帳號狀態</th>
+                                        <th>註冊日期</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    <tr>
+                                        <td colspan="7" class="loading">載入中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Content View -->
+                    <div id="content-view" class="view">
+                        <div class="view-header">
+                            <h2>內容管理</h2>
+                            <button class="btn-primary" onclick="showAddContentModal()">➕ 新增影片</button>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>標題</th>
+                                        <th>類型</th>
+                                        <th>授權用戶數</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="content-table-body">
+                                    <tr>
+                                        <td colspan="5" class="loading">載入中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Permissions View -->
+                    <div id="permissions-view" class="view">
+                        <div class="view-header">
+                            <h2>權限管理</h2>
+                            <div class="search-box">
+                                <input type="text" id="permission-search" placeholder="搜尋用戶">
+                                <button class="btn-secondary" id="permission-search-btn">🔍 搜尋</button>
+                            </div>
+                        </div>
+
+                        <div id="permission-editor" class="permission-editor hidden">
+                            <div class="editor-header">
+                                <h3>編輯用戶權限</h3>
+                                <button class="btn-close" id="close-editor">✕</button>
+                            </div>
+
+                            <div class="user-info">
+                                <p><strong>用戶:</strong> <span id="selected-user-email"></span></p>
+                                <p><strong>姓名:</strong> <span id="selected-user-name"></span></p>
+                                <p><strong>付費狀態:</strong> <span id="selected-user-paid"></span></p>
+                            </div>
+
+                            <div class="permission-controls">
+                                <button class="btn-secondary" id="select-all-btn">全選</button>
+                                <button class="btn-secondary" id="deselect-all-btn">全不選</button>
+                                <button class="btn-primary" id="save-permissions-btn">💾 儲存權限</button>
+                                <button class="btn-primary" onclick="saveReleaseDates()">📅 儲存發佈日期</button>
+                                <button class="btn-secondary" onclick="batchSetReleaseDate()">批量設定日期</button>
+                                <button class="btn-secondary" onclick="clearAllReleaseDates()">清除所有日期</button>
+                            </div>
+
+                            <div class="content-list" id="permission-content-list">
+                                <!-- Content checkboxes will be inserted here -->
+                            </div>
+                        </div>
+
+                        <div id="permission-placeholder" class="placeholder">
+                            <p>👈 請從用戶管理頁面選擇用戶來編輯權限</p>
+                        </div>
+                    </div>
+
+                    <!-- Stats View -->
+                    <div id="stats-view" class="view">
+                        <div class="view-header">
+                            <h2>統計資訊</h2>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card-large">
+                                <h3>用戶統計</h3>
+                                <div class="stat-row">
+                                    <span>總用戶數:</span>
+                                    <span id="stats-total-users">0</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>付費用戶:</span>
+                                    <span id="stats-paid-users">0</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>免費用戶:</span>
+                                    <span id="stats-free-users">0</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card-large">
+                                <h3>內容統計</h3>
+                                <div class="stat-row">
+                                    <span>總內容數:</span>
+                                    <span id="stats-total-content">0</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>免費內容:</span>
+                                    <span id="stats-free-content">0</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>付費內容:</span>
+                                    <span id="stats-paid-content">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div id="user-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="user-modal-title">用戶詳情</h3>
+                <span class="close-modal" id="close-user-modal">×</span>
+            </div>
+            <div class="modal-body" id="user-modal-body">
+                <!-- User details will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="toggle-paid-status">切換付費狀態</button>
+                <button class="btn-secondary" id="toggle-active-status">切換帳號狀態</button>
+                <button class="btn-primary" id="manage-permissions">管理權限</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Modal -->
+    <div id="content-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="content-modal-title">新增影片</h3>
+                <span class="close-modal" onclick="closeContentModal()">×</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>影片標題 *</label>
+                    <input type="text" id="content-title" placeholder="輸入影片標題" required>
+                </div>
+                <div class="form-group">
+                    <label>YouTube 連結 *</label>
+                    <input type="url" id="content-url" placeholder="https://www.youtube.com/watch?v=...">
+                    <small>支援格式: youtube.com/watch?v=... 或 youtu.be/...</small>
+                </div>
+                <div class="form-group">
+                    <label>影片類型 *</label>
+                    <select id="content-type">
+                        <option value="free">免費</option>
+                        <option value="paid">常態付費</option>
+                        <option value="vip">VIP</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>影片描述</label>
+                    <textarea id="content-description" rows="3" placeholder="輸入影片描述（選填）"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeContentModal()">取消</button>
+                <button class="btn-primary" onclick="saveContent()">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+
+</html>

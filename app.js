@@ -10,6 +10,58 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyQhsZ8LHNh0lAMmig8_Iav
 // State
 let currentUser = JSON.parse(localStorage.getItem('user')) || null;
 
+// Validation Functions
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+function validatePassword(password) {
+    return password.length >= 6;
+}
+
+function validateName(name) {
+    return name.trim().length >= 2;
+}
+
+function showFieldError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    const formGroup = field.closest('.form-group');
+    formGroup.classList.add('error');
+    formGroup.classList.remove('success');
+    
+    let errorMsg = formGroup.querySelector('.error-message');
+    if (!errorMsg) {
+        errorMsg = document.createElement('div');
+        errorMsg.className = 'error-message';
+        formGroup.appendChild(errorMsg);
+    }
+    errorMsg.textContent = message;
+    errorMsg.classList.add('show');
+}
+
+function clearFieldError(fieldId) {
+    const field = document.getElementById(fieldId);
+    const formGroup = field.closest('.form-group');
+    formGroup.classList.remove('error');
+    formGroup.classList.add('success');
+    
+    const errorMsg = formGroup.querySelector('.error-message');
+    if (errorMsg) {
+        errorMsg.classList.remove('show');
+    }
+}
+
+function showLoading(containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '<div class="spinner"></div>';
+}
+
+function showMessage(message, type = 'info') {
+    app.authMessage.textContent = message;
+    app.authMessage.style.color = type === 'error' ? '#dc2626' : 'var(--primary)';
+}
+
 // DOM Elements
 const app = {
     authContainer: document.getElementById('auth-container'),
@@ -155,19 +207,40 @@ async function handleLogin(e) {
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
 
-    app.authMessage.textContent = '登入中...';
+    // Validation
+    let isValid = true;
+    
+    if (!validateEmail(email)) {
+        showFieldError('login-email', '請輸入有效的 Email 地址');
+        isValid = false;
+    } else {
+        clearFieldError('login-email');
+    }
+    
+    if (!validatePassword(password)) {
+        showFieldError('login-password', '密碼至少需要 6 個字元');
+        isValid = false;
+    } else {
+        clearFieldError('login-password');
+    }
+    
+    if (!isValid) return;
+
+    showMessage('登入中...', 'info');
 
     try {
         const res = await callApi('login', { email, password });
         if (res.status === 'success') {
             currentUser = res.data;
             localStorage.setItem('user', JSON.stringify(currentUser));
-            showDashboard();
+            showMessage('登入成功！', 'success');
+            setTimeout(() => showDashboard(), 500);
         } else {
-            app.authMessage.textContent = '登入失敗: ' + res.message;
+            showMessage('登入失敗: ' + (res.message || '請檢查您的帳號密碼'), 'error');
         }
     } catch (err) {
-        app.authMessage.textContent = '連線錯誤';
+        console.error('Login error:', err);
+        showMessage('連線錯誤，請稍後再試', 'error');
     }
 }
 
@@ -177,19 +250,49 @@ async function handleRegister(e) {
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
 
-    app.authMessage.textContent = '註冊中...';
+    // Validation
+    let isValid = true;
+    
+    if (!validateName(name)) {
+        showFieldError('reg-name', '姓名至少需要 2 個字元');
+        isValid = false;
+    } else {
+        clearFieldError('reg-name');
+    }
+    
+    if (!validateEmail(email)) {
+        showFieldError('reg-email', '請輸入有效的 Email 地址');
+        isValid = false;
+    } else {
+        clearFieldError('reg-email');
+    }
+    
+    if (!validatePassword(password)) {
+        showFieldError('reg-password', '密碼至少需要 6 個字元');
+        isValid = false;
+    } else {
+        clearFieldError('reg-password');
+    }
+    
+    if (!isValid) return;
+
+    showMessage('註冊中...', 'info');
 
     try {
         const res = await callApi('register', { name, email, password });
         if (res.status === 'success') {
-            alert('註冊成功！請登入。');
-            // Switch to login tab
-            document.querySelector('[data-tab="login"]').click();
+            showMessage('註冊成功！請登入', 'success');
+            setTimeout(() => {
+                document.querySelector('[data-tab="login"]').click();
+                // Pre-fill email
+                document.getElementById('login-email').value = email;
+            }, 1000);
         } else {
-            app.authMessage.textContent = '註冊失敗: ' + res.message;
+            showMessage('註冊失敗: ' + (res.message || '請稍後再試'), 'error');
         }
     } catch (err) {
-        app.authMessage.textContent = '連線錯誤';
+        console.error('Register error:', err);
+        showMessage('連線錯誤，請稍後再試', 'error');
     }
 }
 
@@ -222,7 +325,7 @@ function handleLogout() {
 async function loadContent() {
     if (!currentUser) return;
 
-    app.contentGrid.innerHTML = '<p>載入中...</p>';
+    showLoading('content-grid');
 
     try {
         const res = await callApi('getContent', { token: currentUser.token });
@@ -230,11 +333,26 @@ async function loadContent() {
         if (res.status === 'success') {
             renderContent(res.data.content);
         } else {
-            app.contentGrid.innerHTML = '<p>無法載入內容: ' + res.message + '</p>';
-            if (res.message === 'Session expired') handleLogout();
+            app.contentGrid.innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: var(--text);">
+                    <p style="font-size: 1.1rem; margin-bottom: 1rem;">😕 無法載入內容</p>
+                    <p style="color: var(--text-light);">${res.message || '請稍後再試'}</p>
+                    <button onclick="loadContent()" class="btn-secondary" style="margin-top: 1.5rem;">重試</button>
+                </div>
+            `;
+            if (res.message === 'Session expired') {
+                setTimeout(handleLogout, 2000);
+            }
         }
     } catch (err) {
-        app.contentGrid.innerHTML = '<p>載入失敗</p>';
+        console.error('Load content error:', err);
+        app.contentGrid.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: var(--text);">
+                <p style="font-size: 1.1rem; margin-bottom: 1rem;">❌ 載入失敗</p>
+                <p style="color: var(--text-light);">請檢查網路連線</p>
+                <button onclick="loadContent()" class="btn-secondary" style="margin-top: 1.5rem;">重試</button>
+            </div>
+        `;
     }
 }
 
