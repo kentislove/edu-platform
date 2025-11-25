@@ -119,16 +119,33 @@
                                 <tbody id="users-table-body">
                                     <tr>
                                         <td colspan="7" class="loading">載入中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Content View -->
+                    <div id="content-view" class="view">
+                        <div class="view-header">
+                            <h2>內容管理</h2>
+                            <button class="btn-primary" onclick="showAddContentModal()">➕ 新增影片</button>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
                                         <th>標題</th>
                                         <th>類型</th>
-                                        <th>免費</th>
                                         <th>授權用戶數</th>
                                         <th>操作</th>
                                     </tr>
-                                    </thead>
+                                </thead>
                                 <tbody id="content-table-body">
                                     <tr>
-                                        <td colspan="6" class="loading">載入中...</td>
+                                        <td colspan="5" class="loading">載入中...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -160,7 +177,10 @@
                             <div class="permission-controls">
                                 <button class="btn-secondary" id="select-all-btn">全選</button>
                                 <button class="btn-secondary" id="deselect-all-btn">全不選</button>
-                                <button class="btn-primary" id="save-permissions-btn">💾 儲存變更</button>
+                                <button class="btn-primary" id="save-permissions-btn">💾 儲存權限</button>
+                                <button class="btn-primary" onclick="saveReleaseDates()">📅 儲存發佈日期</button>
+                                <button class="btn-secondary" onclick="batchSetReleaseDate()">批量設定日期</button>
+                                <button class="btn-secondary" onclick="clearAllReleaseDates()">清除所有日期</button>
                             </div>
 
                             <div class="content-list" id="permission-content-list">
@@ -218,7 +238,7 @@
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- User Modal -->
     <div id="user-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -232,6 +252,49 @@
                 <button class="btn-secondary" id="toggle-paid-status">切換付費狀態</button>
                 <button class="btn-secondary" id="toggle-active-status">切換帳號狀態</button>
                 <button class="btn-primary" id="manage-permissions">管理權限</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Modal -->
+    <div id="content-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="content-modal-title">新增影片</h3>
+                <span class="close-modal" onclick="closeContentModal()">×</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>影片標題 *</label>
+                    <input type="text" id="content-title" placeholder="輸入影片標題" required>
+                </div>
+                <div class="form-group">
+                    <label>YouTube 連結 *</label>
+                    <input type="url" id="content-url" placeholder="https://www.youtube.com/embed/VIDEO_ID">
+                    <small>
+                        <strong>請使用 Embed 格式：</strong> https://www.youtube.com/embed/VIDEO_ID<br>
+                        <strong>如何取得：</strong>
+                        1. 在 YouTube 影片頁面點擊「分享」→「嵌入」<br>
+                        2. 複製 src 中的網址（格式：https://www.youtube.com/embed/...）<br>
+                        或將 watch?v= 改為 embed/（例：watch?v=ABC123 → embed/ABC123）
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label>影片類型 *</label>
+                    <select id="content-type">
+                        <option value="free">免費</option>
+                        <option value="paid">常態付費</option>
+                        <option value="vip">VIP</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>影片描述</label>
+                    <textarea id="content-description" rows="3" placeholder="輸入影片描述（選填）"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeContentModal()">取消</button>
+                <button class="btn-primary" onclick="saveContent()">儲存</button>
             </div>
         </div>
     </div>
