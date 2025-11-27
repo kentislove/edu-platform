@@ -663,6 +663,7 @@ body {
     gap: 0.5rem;
 }
 
+
 .content-item-date {
     display: flex;
     align-items: center;
@@ -688,3 +689,44 @@ body {
     outline: none;
     border-color: var(--admin-primary);
 }
+
+/* Content Type Selector */
+.content-item-controls {
+    display: flex;
+    gap: 1rem;
+    margin-left: 2.5rem;
+    margin-top: 0.5rem;
+}
+
+.content-item-type {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.content-item-type label {
+    color: var(--admin-text-light);
+    min-width: 80px;
+}
+
+.type-select {
+    padding: 0.5rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    background-color: white;
+    cursor: pointer;
+    min-width: 120px;
+}
+
+.type-select:hover {
+    border-color: var(--admin-primary);
+}
+
+.type-select:focus {
+    outline: none;
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+

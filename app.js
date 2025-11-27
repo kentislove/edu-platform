@@ -5,7 +5,7 @@
  */
 
 // REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbyQhsZ8LHNh0lAMmig8_IavNcaogLkYOwGqqDFdAlH_3LVbYMafMJyAs-g22xjrsBIE/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwcBwvrIdoF4oGWUfl6pg6LrwYOJPGPWbfSa9OzURAA8bYLy0qM7SH00MtPgt-Y4S_D/exec';
 
 // State
 let currentUser = JSON.parse(localStorage.getItem('user')) || null;
@@ -29,7 +29,7 @@ function showFieldError(fieldId, message) {
     const formGroup = field.closest('.form-group');
     formGroup.classList.add('error');
     formGroup.classList.remove('success');
-    
+
     let errorMsg = formGroup.querySelector('.error-message');
     if (!errorMsg) {
         errorMsg = document.createElement('div');
@@ -45,7 +45,7 @@ function clearFieldError(fieldId) {
     const formGroup = field.closest('.form-group');
     formGroup.classList.remove('error');
     formGroup.classList.add('success');
-    
+
     const errorMsg = formGroup.querySelector('.error-message');
     if (errorMsg) {
         errorMsg.classList.remove('show');
@@ -209,21 +209,21 @@ async function handleLogin(e) {
 
     // Validation
     let isValid = true;
-    
+
     if (!validateEmail(email)) {
         showFieldError('login-email', '請輸入有效的 Email 地址');
         isValid = false;
     } else {
         clearFieldError('login-email');
     }
-    
+
     if (!validatePassword(password)) {
         showFieldError('login-password', '密碼至少需要 6 個字元');
         isValid = false;
     } else {
         clearFieldError('login-password');
     }
-    
+
     if (!isValid) return;
 
     showMessage('登入中...', 'info');
@@ -252,28 +252,28 @@ async function handleRegister(e) {
 
     // Validation
     let isValid = true;
-    
+
     if (!validateName(name)) {
         showFieldError('reg-name', '姓名至少需要 2 個字元');
         isValid = false;
     } else {
         clearFieldError('reg-name');
     }
-    
+
     if (!validateEmail(email)) {
         showFieldError('reg-email', '請輸入有效的 Email 地址');
         isValid = false;
     } else {
         clearFieldError('reg-email');
     }
-    
+
     if (!validatePassword(password)) {
         showFieldError('reg-password', '密碼至少需要 6 個字元');
         isValid = false;
     } else {
         clearFieldError('reg-password');
     }
-    
+
     if (!isValid) return;
 
     showMessage('註冊中...', 'info');

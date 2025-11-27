@@ -156,83 +156,41 @@
                     <div id="permissions-view" class="view">
                         <div class="view-header">
                             <h2>權限管理</h2>
-                            <div class="search-box">
-                                <input type="text" id="permission-search" placeholder="搜尋用戶">
-                                <button class="btn-secondary" id="permission-search-btn">🔍 搜尋</button>
-                            </div>
-                        </div>
 
-                        <div id="permission-editor" class="permission-editor hidden">
-                            <div class="editor-header">
-                                <h3>編輯用戶權限</h3>
-                                <button class="btn-close" id="close-editor">✕</button>
-                            </div>
-
-                            <div class="user-info">
-                                <p><strong>用戶:</strong> <span id="selected-user-email"></span></p>
-                                <p><strong>姓名:</strong> <span id="selected-user-name"></span></p>
-                                <p><strong>付費狀態:</strong> <span id="selected-user-paid"></span></p>
-                            </div>
-
-                            <div class="permission-controls">
-                                <button class="btn-secondary" id="select-all-btn">全選</button>
-                                <button class="btn-secondary" id="deselect-all-btn">全不選</button>
-                                <button class="btn-primary" id="save-permissions-btn">💾 儲存權限</button>
-                                <button class="btn-primary" onclick="saveReleaseDates()">📅 儲存發佈日期</button>
-                                <button class="btn-secondary" onclick="batchSetReleaseDate()">批量設定日期</button>
-                                <button class="btn-secondary" onclick="clearAllReleaseDates()">清除所有日期</button>
-                            </div>
-
-                            <div class="content-list" id="permission-content-list">
-                                <!-- Content checkboxes will be inserted here -->
-                            </div>
-                        </div>
-
-                        <div id="permission-placeholder" class="placeholder">
-                            <p>👈 請從用戶管理頁面選擇用戶來編輯權限</p>
-                        </div>
-                    </div>
-
-                    <!-- Stats View -->
-                    <div id="stats-view" class="view">
-                        <div class="view-header">
-                            <h2>統計資訊</h2>
-                        </div>
-
-                        <div class="stats-grid">
-                            <div class="stat-card-large">
-                                <h3>用戶統計</h3>
-                                <div class="stat-row">
-                                    <span>總用戶數:</span>
-                                    <span id="stats-total-users">0</span>
+                            <div class="stats-grid">
+                                <div class="stat-card-large">
+                                    <h3>用戶統計</h3>
+                                    <div class="stat-row">
+                                        <span>總用戶數:</span>
+                                        <span id="stats-total-users">0</span>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>付費用戶:</span>
+                                        <span id="stats-paid-users">0</span>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>免費用戶:</span>
+                                        <span id="stats-free-users">0</span>
+                                    </div>
                                 </div>
-                                <div class="stat-row">
-                                    <span>付費用戶:</span>
-                                    <span id="stats-paid-users">0</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span>免費用戶:</span>
-                                    <span id="stats-free-users">0</span>
-                                </div>
-                            </div>
 
-                            <div class="stat-card-large">
-                                <h3>內容統計</h3>
-                                <div class="stat-row">
-                                    <span>總內容數:</span>
-                                    <span id="stats-total-content">0</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span>免費內容:</span>
-                                    <span id="stats-free-content">0</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span>付費內容:</span>
-                                    <span id="stats-paid-content">0</span>
+                                <div class="stat-card-large">
+                                    <h3>內容統計</h3>
+                                    <div class="stat-row">
+                                        <span>總內容數:</span>
+                                        <span id="stats-total-content">0</span>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>免費內容:</span>
+                                        <span id="stats-free-content">0</span>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>付費內容:</span>
+                                        <span id="stats-paid-content">0</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                 </main>
             </div>
         </div>

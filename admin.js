@@ -1,82 +1,77 @@
-// ============================================
-// CONFIGURATION
-// ============================================
+/**
+ * Admin Panel Logic for EduPlatform
+ * Manages users, content, and permissions
+ */
 
-// API Configuration
+// REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
 const API_URL = 'https://script.google.com/macros/s/AKfycbwcBwvrIdoF4oGWUfl6pg6LrwYOJPGPWbfSa9OzURAA8bYLy0qM7SH00MtPgt-Y4S_D/exec';
 
-// Global State
-let adminToken = null;
+// State
+let adminToken = localStorage.getItem('adminToken') || null;
+let adminUser = JSON.parse(localStorage.getItem('adminUser')) || null;
 let allUsers = [];
 let allContent = [];
 let selectedUser = null;
-let selectedPermissionUserId = null;
-let editingContentId = null;
 
 // DOM Elements
 const elements = {
+    // Pages
     loginPage: document.getElementById('login-page'),
     dashboardPage: document.getElementById('dashboard-page'),
-    adminLoginForm: document.getElementById('admin-login-form'),
+
+    // Login
+    loginForm: document.getElementById('admin-login-form'),
     loginMessage: document.getElementById('login-message'),
+
+    // Navbar
     adminName: document.getElementById('admin-name'),
     logoutBtn: document.getElementById('admin-logout-btn'),
-
-    // Views
-    usersView: document.getElementById('users-view'),
-    contentView: document.getElementById('content-view'),
-    permissionsView: document.getElementById('permissions-view'),
-    statsView: document.getElementById('stats-view'),
 
     // Tables
     usersTableBody: document.getElementById('users-table-body'),
     contentTableBody: document.getElementById('content-table-body'),
 
-    // Modals
-    userModal: document.getElementById('user-modal'),
-    userModalBody: document.getElementById('user-modal-body'),
+    // Stats
+    totalUsers: document.getElementById('total-users'),
+    paidUsers: document.getElementById('paid-users'),
+    activeUsers: document.getElementById('active-users'),
 
     // Permission Editor
     permissionEditor: document.getElementById('permission-editor'),
     permissionPlaceholder: document.getElementById('permission-placeholder'),
-    permissionContentList: document.getElementById('permission-content-list'),
     selectedUserEmail: document.getElementById('selected-user-email'),
     selectedUserName: document.getElementById('selected-user-name'),
-    selectedUserPaid: document.getElementById('selected-user-paid')
+    selectedUserPaid: document.getElementById('selected-user-paid'),
+    permissionContentList: document.getElementById('permission-content-list'),
+
+    // Modals
+    userModal: document.getElementById('user-modal'),
 };
 
-// ============================================
-// INITIALIZATION
-// ============================================
-
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize
+function init() {
     setupEventListeners();
-    checkAdminSession();
-});
+    checkAuth();
+}
 
 function setupEventListeners() {
     // Login
-    elements.adminLoginForm.addEventListener('submit', handleAdminLogin);
+    elements.loginForm.addEventListener('submit', handleLogin);
     elements.logoutBtn.addEventListener('click', handleLogout);
 
     // Navigation
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            switchView(link.dataset.view);
+            const view = e.currentTarget.dataset.view;
+            switchView(view);
         });
     });
 
-    // User Search
+    // Search
     document.getElementById('search-btn').addEventListener('click', searchUsers);
-    document.getElementById('user-search').addEventListener('keyup', (e) => {
+    document.getElementById('user-search').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') searchUsers();
-    });
-
-    // Permission Search
-    document.getElementById('permission-search-btn').addEventListener('click', searchPermissionUsers);
-    document.getElementById('permission-search').addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') searchPermissionUsers();
     });
 
     // Permission Editor
@@ -85,122 +80,119 @@ function setupEventListeners() {
     document.getElementById('deselect-all-btn').addEventListener('click', deselectAllPermissions);
     document.getElementById('save-permissions-btn').addEventListener('click', savePermissions);
 
-    // User Modal
+    // Modal
     document.getElementById('close-user-modal').addEventListener('click', closeUserModal);
     document.getElementById('toggle-paid-status').addEventListener('click', togglePaidStatus);
     document.getElementById('toggle-active-status').addEventListener('click', toggleActiveStatus);
     document.getElementById('manage-permissions').addEventListener('click', () => {
-        closeUserModal();
-        editPermissions(selectedUser.user_id);
+        if (selectedUser) {
+            closeUserModal();
+            editPermissions(selectedUser.user_id);
+        }
     });
 }
 
-// ============================================
-// API CALLS
-// ============================================
+function checkAuth() {
+    if (adminToken && adminUser) {
+        showDashboard();
+    } else {
+        showLogin();
+    }
+}
 
+function showLogin() {
+    elements.loginPage.classList.remove('hidden');
+    elements.dashboardPage.classList.add('hidden');
+}
+
+function showDashboard() {
+    elements.loginPage.classList.add('hidden');
+    elements.dashboardPage.classList.remove('hidden');
+    elements.adminName.textContent = adminUser.name || 'Admin';
+
+    // Load initial data
+    loadUsers();
+    loadContent();
+    loadStats();
+}
+
+// API Calls
 async function callApi(action, data = {}) {
     try {
-        // 將數據編碼為 Base64
-        const jsonStr = JSON.stringify({ action, ...data });
-        const base64Data = btoa(unescape(encodeURIComponent(jsonStr)));
+        const payload = JSON.stringify({ action, ...data });
 
-        // 使用 GET 請求避免 CORS 問題
-        const url = `${API_URL}?action=${action}&data=${encodeURIComponent(base64Data)}`;
-
-        const response = await fetch(url, {
-            method: 'GET'
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: payload
         });
 
-        return await response.json();
+        const result = await response.json();
+        return result;
     } catch (error) {
         console.error('API Error:', error);
         throw error;
     }
 }
 
-// ============================================
-// AUTHENTICATION
-// ============================================
-
-async function handleAdminLogin(e) {
+// Login Handler
+async function handleLogin(e) {
     e.preventDefault();
 
     const email = document.getElementById('admin-email').value;
     const password = document.getElementById('admin-password').value;
+
+    showMessage('登入中...', 'info');
 
     try {
         const res = await callApi('adminLogin', { email, password });
 
         if (res.status === 'success') {
             adminToken = res.data.token;
-            elements.adminName.textContent = res.data.name;
-            localStorage.setItem('adminToken', adminToken);
-            localStorage.setItem('adminName', res.data.name);
+            adminUser = res.data;
 
-            showDashboard();
-            loadUsers();
-            loadContent();
+            localStorage.setItem('adminToken', adminToken);
+            localStorage.setItem('adminUser', JSON.stringify(adminUser));
+
+            showMessage('登入成功！', 'success');
+            setTimeout(() => showDashboard(), 500);
         } else {
-            elements.loginMessage.textContent = res.message;
-            elements.loginMessage.className = 'message error';
+            showMessage('登入失敗: ' + res.message, 'error');
         }
     } catch (err) {
-        elements.loginMessage.textContent = '登入失敗，請稍後再試';
-        elements.loginMessage.className = 'message error';
+        console.error('Login error:', err);
+        showMessage('連線錯誤，請稍後再試', 'error');
     }
 }
 
 function handleLogout() {
     adminToken = null;
+    adminUser = null;
     localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminName');
-
-    elements.loginPage.classList.remove('hidden');
-    elements.dashboardPage.classList.add('hidden');
-    elements.adminLoginForm.reset();
-    elements.loginMessage.textContent = '';
+    localStorage.removeItem('adminUser');
+    showLogin();
 }
 
-function checkAdminSession() {
-    const token = localStorage.getItem('adminToken');
-    const name = localStorage.getItem('adminName');
-
-    if (token && name) {
-        adminToken = token;
-        elements.adminName.textContent = name;
-        showDashboard();
-        loadUsers();
-        loadContent();
-    }
+function showMessage(message, type = 'info') {
+    elements.loginMessage.textContent = message;
+    elements.loginMessage.className = `message ${type}`;
 }
 
-function showDashboard() {
-    elements.loginPage.classList.add('hidden');
-    elements.dashboardPage.classList.remove('hidden');
-}
-
-// ============================================
-// NAVIGATION
-// ============================================
-
+// View Switching
 function switchView(viewName) {
-    // Hide all views
-    document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+    // Update nav links
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    document.querySelector(`[data-view="${viewName}"]`).classList.add('active');
 
-    // Remove active from all nav links
-    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    // Update views
+    document.querySelectorAll('.view').forEach(view => {
+        view.classList.remove('active');
+    });
 
-    // Show selected view
     const viewElement = document.getElementById(`${viewName}-view`);
     if (viewElement) {
         viewElement.classList.add('active');
-    }
-
-    // Set active nav link
-    const navLink = document.querySelector(`[data-view="${viewName}"]`);
-    if (navLink) {
-        navLink.classList.add('active');
     }
 
     // Load data for specific views
@@ -213,11 +205,10 @@ function switchView(viewName) {
     }
 }
 
-// ============================================
-// USER MANAGEMENT
-// ============================================
-
+// Load Users
 async function loadUsers() {
+    elements.usersTableBody.innerHTML = '<tr><td colspan="7" class="loading">載入中...</td></tr>';
+
     try {
         const res = await callApi('getAllUsers', { token: adminToken });
 
@@ -247,24 +238,24 @@ function renderUsers(users) {
             <td><span class="badge info">${user.auth_provider}</span></td>
             <td><span class="badge ${user.is_paid ? 'success' : 'warning'}">${user.is_paid ? '付費' : '免費'}</span></td>
             <td><span class="badge ${user.is_active ? 'success' : 'danger'}">${user.is_active ? '啟用' : '停用'}</span></td>
-            <td>${new Date(user.created_at).toLocaleDateString()}</td>
+            <td>${new Date(user.created_at).toLocaleDateString('zh-TW')}</td>
             <td>
                 <button class="action-btn primary" onclick="viewUser('${user.user_id}')">查看</button>
                 <button class="action-btn secondary" onclick="editPermissions('${user.user_id}')">權限</button>
-                <button class="action-btn danger" onclick="deleteUser('${user.user_id}')">刪除</button>
+                <button class="action-btn secondary" style="background: #ef4444; color: white;" onclick="deleteUser('${user.user_id}')">刪除</button>
             </td>
         </tr>
     `).join('');
 }
 
 function updateUserStats() {
-    const totalUsers = allUsers.length;
-    const paidUsers = allUsers.filter(u => u.is_paid).length;
-    const activeUsers = allUsers.filter(u => u.is_active).length;
+    const total = allUsers.length;
+    const paid = allUsers.filter(u => u.is_paid).length;
+    const active = allUsers.filter(u => u.is_active).length;
 
-    document.getElementById('total-users').textContent = totalUsers;
-    document.getElementById('paid-users').textContent = paidUsers;
-    document.getElementById('active-users').textContent = activeUsers;
+    elements.totalUsers.textContent = total;
+    elements.paidUsers.textContent = paid;
+    elements.activeUsers.textContent = active;
 }
 
 function searchUsers() {
@@ -283,17 +274,253 @@ function searchUsers() {
     renderUsers(filtered);
 }
 
-function viewUser(userId) {
+// Load Content
+async function loadContent() {
+    elements.contentTableBody.innerHTML = '<tr><td colspan="6" class="loading">載入中...</td></tr>';
+
+    try {
+        const res = await callApi('getAllContent', { token: adminToken });
+
+        if (res.status === 'success') {
+            allContent = res.data.content;
+            renderContent(allContent);
+        } else {
+            elements.contentTableBody.innerHTML = `<tr><td colspan="6" class="loading">載入失敗: ${res.message}</td></tr>`;
+        }
+    } catch (err) {
+        console.error('Load content error:', err);
+        elements.contentTableBody.innerHTML = '<tr><td colspan="6" class="loading">載入失敗</td></tr>';
+    }
+}
+
+function renderContent(content) {
+    if (content.length === 0) {
+        elements.contentTableBody.innerHTML = '<tr><td colspan="6" class="loading">沒有內容資料</td></tr>';
+        return;
+    }
+
+    elements.contentTableBody.innerHTML = content.map(item => {
+        let typeBadge = '';
+        if (item.content_type === 'free') {
+            typeBadge = '<span class="badge success">免費</span>';
+        } else if (item.content_type === 'paid') {
+            typeBadge = '<span class="badge info">常態付費</span>';
+        } else if (item.content_type === 'vip') {
+            typeBadge = '<span class="badge warning">VIP</span>';
+        }
+
+        return `
+            <tr>
+                <td>${item.content_id}</td>
+                <td>${item.title}</td>
+                <td>${typeBadge}</td>
+                <td>${item.access_count || 0} / ${allUsers.length}</td>
+                <td>
+                    <button class="action-btn primary" onclick="editContent('${item.content_id}')">編輯</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Permission Management
+async function editPermissions(userId) {
     selectedUser = allUsers.find(u => u.user_id === userId);
     if (!selectedUser) return;
 
-    elements.userModalBody.innerHTML = `
-        <p><strong>Email:</strong> ${selectedUser.email}</p>
-        <p><strong>姓名:</strong> ${selectedUser.name}</p>
-        <p><strong>註冊方式:</strong> ${selectedUser.auth_provider}</p>
-        <p><strong>付費狀態:</strong> ${selectedUser.is_paid ? '付費' : '免費'}</p>
-        <p><strong>帳號狀態:</strong> ${selectedUser.is_active ? '啟用' : '停用'}</p>
-        <p><strong>註冊日期:</strong> ${new Date(selectedUser.created_at).toLocaleString()}</p>
+    // Switch to permissions view
+    switchView('permissions');
+
+    // Show editor
+    elements.permissionPlaceholder.classList.add('hidden');
+    elements.permissionEditor.classList.remove('hidden');
+
+    // Update user info
+    elements.selectedUserEmail.textContent = selectedUser.email;
+    elements.selectedUserName.textContent = selectedUser.name;
+    elements.selectedUserPaid.textContent = selectedUser.is_paid ? '付費用戶' : '免費用戶';
+
+    // Load user permissions
+    await loadUserPermissions(userId);
+}
+
+async function loadUserPermissions(userId) {
+    elements.permissionContentList.innerHTML = '<p class="loading">載入中...</p>';
+
+    try {
+        const res = await callApi('getUserPermissions', {
+            token: adminToken,
+            userId: userId
+        });
+
+        if (res.status === 'success') {
+            renderPermissionList(res.data.permissions);
+        } else {
+            elements.permissionContentList.innerHTML = `<p class="loading">載入失敗: ${res.message}</p>`;
+        }
+    } catch (err) {
+        console.error('Load permissions error:', err);
+        elements.permissionContentList.innerHTML = '<p class="loading">載入失敗</p>';
+    }
+}
+
+function renderPermissionList(permissions) {
+    elements.permissionContentList.innerHTML = permissions.map(perm => {
+        let typeBadge = '';
+        if (perm.content_type === 'free') {
+            typeBadge = '<span class="badge success">免費</span>';
+        } else if (perm.content_type === 'paid') {
+            typeBadge = '<span class="badge info">常態付費</span>';
+        } else if (perm.content_type === 'vip') {
+            typeBadge = '<span class="badge warning">VIP</span>';
+        }
+
+        return `
+            <div class="content-item">
+                <div class="content-item-header">
+                    <input type="checkbox" 
+                           id="perm-${perm.content_id}" 
+                           data-content-id="${perm.content_id}"
+                           ${perm.has_access ? 'checked' : ''}>
+                    <label for="perm-${perm.content_id}">
+                        ${perm.title}
+                        ${typeBadge}
+                    </label>
+                </div>
+                <div class="content-item-controls">
+                    <div class="content-item-type">
+                        <label for="type-${perm.content_id}">影片類型：</label>
+                        <select id="type-${perm.content_id}" 
+                                class="type-select"
+                                data-content-id="${perm.content_id}"
+                                data-original-type="${perm.content_type}">
+                            <option value="free" ${perm.content_type === 'free' ? 'selected' : ''}>免費</option>
+                            <option value="paid" ${perm.content_type === 'paid' ? 'selected' : ''}>常態付費</option>
+                            <option value="vip" ${perm.content_type === 'vip' ? 'selected' : ''}>VIP</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function closePermissionEditor() {
+    elements.permissionEditor.classList.add('hidden');
+    elements.permissionPlaceholder.classList.remove('hidden');
+    selectedUser = null;
+}
+
+function selectAllPermissions() {
+    document.querySelectorAll('#permission-content-list input[type="checkbox"]').forEach(cb => {
+        cb.checked = true;
+    });
+}
+
+function deselectAllPermissions() {
+    document.querySelectorAll('#permission-content-list input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+    });
+}
+
+async function savePermissions() {
+    if (!selectedUser) return;
+
+    const checkboxes = document.querySelectorAll('#permission-content-list input[type="checkbox"]');
+    const permissions = Array.from(checkboxes).map(cb => ({
+        content_id: cb.dataset.contentId,
+        has_access: cb.checked
+    }));
+
+    try {
+        const res = await callApi('updateUserPermissions', {
+            token: adminToken,
+            userId: selectedUser.user_id,
+            permissions: permissions
+        });
+
+        if (res.status === 'success') {
+            alert('權限更新成功！');
+        } else {
+            alert('權限更新失敗: ' + res.message);
+        }
+    } catch (err) {
+        console.error('Save permissions error:', err);
+        alert('權限更新失敗');
+    }
+}
+
+// Save Content Types - NEW FUNCTION
+async function saveContentTypes() {
+    if (!selectedUser) return;
+
+    const typeSelects = document.querySelectorAll('.type-select');
+    const contentTypes = [];
+    let hasChanges = false;
+
+    typeSelects.forEach(select => {
+        const contentId = select.dataset.contentId;
+        const newType = select.value;
+        const originalType = select.dataset.originalType;
+
+        if (newType !== originalType) {
+            hasChanges = true;
+        }
+
+        contentTypes.push({
+            content_id: contentId,
+            content_type: newType
+        });
+    });
+
+    if (!hasChanges) {
+        alert('沒有變更需要儲存');
+        return;
+    }
+
+    if (!confirm('確定要更新影片類型嗎？這將影響所有用戶對這些影片的存取權限。')) {
+        return;
+    }
+
+    try {
+        const res = await callApi('updateContentTypes', {
+            token: adminToken,
+            contentTypes: contentTypes
+        });
+
+        if (res.status === 'success') {
+            alert('影片類型更新成功！');
+            // 重新載入內容列表
+            await loadContent();
+            // 重新載入權限列表
+            await loadUserPermissions(selectedUser.user_id);
+        } else {
+            alert('更新失敗: ' + res.message);
+        }
+    } catch (err) {
+        console.error('Save content types error:', err);
+        alert('更新失敗');
+    }
+}
+
+// User Details Modal
+function viewUser(userId) {
+    const user = allUsers.find(u => u.user_id === userId);
+    if (!user) return;
+
+    selectedUser = user;
+
+    const modalBody = document.getElementById('user-modal-body');
+    modalBody.innerHTML = `
+        <div style="display: grid; gap: 1rem;">
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>姓名:</strong> ${user.name}</p>
+            <p><strong>用戶 ID:</strong> ${user.user_id}</p>
+            <p><strong>註冊方式:</strong> ${user.auth_provider}</p>
+            <p><strong>付費狀態:</strong> <span class="badge ${user.is_paid ? 'success' : 'warning'}">${user.is_paid ? '付費' : '免費'}</span></p>
+            <p><strong>帳號狀態:</strong> <span class="badge ${user.is_active ? 'success' : 'danger'}">${user.is_active ? '啟用' : '停用'}</span></p>
+            <p><strong>註冊日期:</strong> ${new Date(user.created_at).toLocaleString('zh-TW')}</p>
+        </div>
     `;
 
     elements.userModal.classList.remove('hidden');
@@ -304,11 +531,13 @@ function closeUserModal() {
     selectedUser = null;
 }
 
+// Toggle User Status Functions
 async function togglePaidStatus() {
     if (!selectedUser) return;
 
     const newStatus = !selectedUser.is_paid;
     const confirmMsg = `確定要將 ${selectedUser.email} 的付費狀態改為「${newStatus ? '付費' : '免費'}」嗎？`;
+
     if (!confirm(confirmMsg)) return;
 
     try {
@@ -337,6 +566,7 @@ async function toggleActiveStatus() {
 
     const newStatus = !selectedUser.is_active;
     const confirmMsg = `確定要將 ${selectedUser.email} 的帳號狀態改為「${newStatus ? '啟用' : '停用'}」嗎？`;
+
     if (!confirm(confirmMsg)) return;
 
     try {
@@ -365,6 +595,7 @@ async function deleteUser(userId) {
     if (!user) return;
 
     const confirmMsg = `確定要刪除用戶 ${user.email} (${user.name}) 嗎？\n\n此操作無法復原！`;
+
     if (!confirm(confirmMsg)) return;
 
     try {
@@ -385,397 +616,7 @@ async function deleteUser(userId) {
     }
 }
 
-// ============================================
-// CONTENT MANAGEMENT
-// ============================================
-
-async function loadContent() {
-    try {
-        const res = await callApi('getAllContent', { token: adminToken });
-
-        if (res.status === 'success') {
-            allContent = res.data.content;
-            renderContent(allContent);
-        } else {
-            elements.contentTableBody.innerHTML = `<tr><td colspan="5" class="loading">載入失敗: ${res.message}</td></tr>`;
-        }
-    } catch (err) {
-        console.error('Load content error:', err);
-        elements.contentTableBody.innerHTML = '<tr><td colspan="5" class="loading">載入失敗</td></tr>';
-    }
-}
-
-function renderContent(content) {
-    if (content.length === 0) {
-        elements.contentTableBody.innerHTML = '<tr><td colspan="5" class="loading">沒有內容資料</td></tr>';
-        return;
-    }
-
-    elements.contentTableBody.innerHTML = content.map(item => {
-        let typeBadge = '';
-        if (item.content_type === 'free') {
-            typeBadge = '<span class="badge success">免費</span>';
-        } else if (item.content_type === 'paid') {
-            typeBadge = '<span class="badge info">常態付費</span>';
-        } else if (item.content_type === 'vip') {
-            typeBadge = '<span class="badge warning">VIP</span>';
-        }
-
-        return `
-            <tr>
-                <td>${item.content_id}</td>
-                <td>${item.title}</td>
-                <td>${typeBadge}</td>
-                <td>${item.access_count || 0} / ${allUsers.length}</td>
-                <td>
-                    <button class="action-btn primary" onclick="editContent('${item.content_id}')">編輯</button>
-                    <button class="action-btn danger" onclick="deleteContent('${item.content_id}')">刪除</button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
-
-function showAddContentModal() {
-    editingContentId = null;
-    document.getElementById('content-modal-title').textContent = '新增影片';
-    document.getElementById('content-title').value = '';
-    document.getElementById('content-url').value = '';
-    document.getElementById('content-type').value = 'paid';
-    document.getElementById('content-description').value = '';
-    document.getElementById('content-modal').classList.remove('hidden');
-}
-
-async function editContent(contentId) {
-    const content = allContent.find(c => c.content_id.toString() === contentId.toString());
-    if (!content) return;
-
-    editingContentId = contentId;
-    document.getElementById('content-modal-title').textContent = '編輯影片';
-    document.getElementById('content-title').value = content.title;
-    document.getElementById('content-url').value = content.url;
-    document.getElementById('content-type').value = content.content_type || 'paid';
-    document.getElementById('content-description').value = content.description || '';
-    document.getElementById('content-modal').classList.remove('hidden');
-}
-
-function closeContentModal() {
-    document.getElementById('content-modal').classList.add('hidden');
-    editingContentId = null;
-}
-
-async function saveContent() {
-    const title = document.getElementById('content-title').value.trim();
-    const url = document.getElementById('content-url').value.trim();
-    const contentType = document.getElementById('content-type').value;
-    const description = document.getElementById('content-description').value.trim();
-
-    if (!title || !url) {
-        alert('請填寫標題和 YouTube 連結');
-        return;
-    }
-
-    if (!isValidYouTubeUrl(url)) {
-        alert('請輸入有效的 YouTube 連結');
-        return;
-    }
-
-    try {
-        const action = editingContentId ? 'updateContent' : 'addContent';
-        const data = {
-            token: adminToken,
-            title,
-            url,
-            content_type: contentType,
-            description
-        };
-
-        if (editingContentId) {
-            data.content_id = editingContentId;
-        }
-
-        const res = await callApi(action, data);
-
-        if (res.status === 'success') {
-            alert(editingContentId ? '影片更新成功！' : '影片新增成功！');
-            closeContentModal();
-            loadContent();
-        } else {
-            alert('操作失敗: ' + res.message);
-        }
-    } catch (err) {
-        console.error('Save content error:', err);
-        alert('操作失敗');
-    }
-}
-
-async function deleteContent(contentId) {
-    const content = allContent.find(c => c.content_id.toString() === contentId.toString());
-    if (!content) return;
-
-    const confirmMsg = `確定要刪除影片「${content.title}」嗎？\n\n此操作將同時刪除所有相關的權限和發佈日期設定，且無法復原！`;
-    if (!confirm(confirmMsg)) return;
-
-    try {
-        const res = await callApi('deleteContent', {
-            token: adminToken,
-            content_id: contentId
-        });
-
-        if (res.status === 'success') {
-            alert('影片刪除成功！');
-            loadContent();
-        } else {
-            alert('刪除失敗: ' + res.message);
-        }
-    } catch (err) {
-        console.error('Delete content error:', err);
-        alert('刪除失敗');
-    }
-}
-
-function isValidYouTubeUrl(url) {
-    const patterns = [
-        /^https?:\/\/(www\.)?youtube\.com\/watch\?v=[\w-]+/,
-        /^https?:\/\/youtu\.be\/[\w-]+/,
-        /^https?:\/\/(www\.)?youtube\.com\/embed\/[\w-]+/
-    ];
-
-    return patterns.some(pattern => pattern.test(url));
-}
-
-// ============================================
-// PERMISSION MANAGEMENT
-// ============================================
-
-function searchPermissionUsers() {
-    const query = document.getElementById('permission-search').value.toLowerCase();
-
-    if (!query) {
-        alert('請輸入搜尋關鍵字');
-        return;
-    }
-
-    const user = allUsers.find(u =>
-        u.email.toLowerCase().includes(query) ||
-        u.name.toLowerCase().includes(query)
-    );
-
-    if (user) {
-        editPermissions(user.user_id);
-    } else {
-        alert('找不到符合的用戶');
-    }
-}
-
-async function editPermissions(userId) {
-    selectedPermissionUserId = userId;
-    const user = allUsers.find(u => u.user_id === userId);
-
-    if (!user) return;
-
-    elements.selectedUserEmail.textContent = user.email;
-    elements.selectedUserName.textContent = user.name;
-    elements.selectedUserPaid.textContent = user.is_paid ? '付費' : '免費';
-
-    elements.permissionPlaceholder.classList.add('hidden');
-    elements.permissionEditor.classList.remove('hidden');
-
-    switchView('permissions');
-
-    await loadPermissions(userId);
-}
-
-async function loadPermissions(userId) {
-    try {
-        const res = await callApi('getUserPermissions', {
-            token: adminToken,
-            userId: userId
-        });
-
-        if (res.status === 'success') {
-            renderPermissionList(res.data.permissions);
-            await loadUserReleaseDates(userId);
-        } else {
-            elements.permissionContentList.innerHTML = `<p class="loading">載入失敗: ${res.message}</p>`;
-        }
-    } catch (err) {
-        console.error('Load permissions error:', err);
-        elements.permissionContentList.innerHTML = '<p class="loading">載入失敗</p>';
-    }
-}
-
-function renderPermissionList(permissions) {
-    elements.permissionContentList.innerHTML = permissions.map(perm => {
-        let typeBadge = '';
-        if (perm.content_type === 'free') {
-            typeBadge = '<span class="badge success">免費</span>';
-        } else if (perm.content_type === 'paid') {
-            typeBadge = '<span class="badge info">常態付費</span>';
-        } else if (perm.content_type === 'vip') {
-            typeBadge = '<span class="badge warning">VIP</span>';
-        }
-
-        const releaseDateValue = perm.release_date ? new Date(perm.release_date).toISOString().split('T')[0] : '';
-
-        return `
-            <div class="content-item">
-                <div class="content-item-header">
-                    <input type="checkbox" 
-                           id="perm-${perm.content_id}" 
-                           data-content-id="${perm.content_id}"
-                           ${perm.has_access ? 'checked' : ''}>
-                    <label for="perm-${perm.content_id}">
-                        ${perm.title}
-                        ${typeBadge}
-                    </label>
-                </div>
-                <div class="content-item-date">
-                    <label for="release-date-${perm.content_id}">發佈日期：</label>
-                    <input type="date" 
-                           id="release-date-${perm.content_id}" 
-                           class="date-input"
-                           value="${releaseDateValue}">
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-async function loadUserReleaseDates(userId) {
-    try {
-        const res = await callApi('getUserReleaseDate', {
-            token: adminToken,
-            userId: userId
-        });
-
-        if (res.status === 'success') {
-            const releaseDates = res.data.releaseDates;
-            releaseDates.forEach(item => {
-                const dateInput = document.getElementById(`release-date-${item.content_id}`);
-                if (dateInput && item.release_date) {
-                    const date = new Date(item.release_date);
-                    const dateStr = date.toISOString().split('T')[0];
-                    dateInput.value = dateStr;
-                }
-            });
-        }
-    } catch (err) {
-        console.error('Load release dates error:', err);
-    }
-}
-
-function closePermissionEditor() {
-    elements.permissionEditor.classList.add('hidden');
-    elements.permissionPlaceholder.classList.remove('hidden');
-    selectedPermissionUserId = null;
-}
-
-function selectAllPermissions() {
-    document.querySelectorAll('#permission-content-list input[type="checkbox"]').forEach(cb => {
-        cb.checked = true;
-    });
-}
-
-function deselectAllPermissions() {
-    document.querySelectorAll('#permission-content-list input[type="checkbox"]').forEach(cb => {
-        cb.checked = false;
-    });
-}
-
-async function savePermissions() {
-    if (!selectedPermissionUserId) return;
-
-    const checkboxes = document.querySelectorAll('#permission-content-list input[type="checkbox"]');
-    const permissions = Array.from(checkboxes).map(cb => ({
-        content_id: cb.dataset.contentId,
-        has_access: cb.checked
-    }));
-
-    try {
-        const res = await callApi('updateUserPermissions', {
-            token: adminToken,
-            userId: selectedPermissionUserId,
-            permissions: permissions
-        });
-
-        if (res.status === 'success') {
-            alert('權限更新成功！');
-        } else {
-            alert('更新失敗: ' + res.message);
-        }
-    } catch (err) {
-        console.error('Save permissions error:', err);
-        alert('更新失敗');
-    }
-}
-
-async function saveReleaseDates() {
-    if (!selectedPermissionUserId) return;
-
-    const releaseDates = [];
-    const dateInputs = document.querySelectorAll('[id^="release-date-"]');
-
-    dateInputs.forEach(input => {
-        const contentId = input.id.replace('release-date-', '');
-        const dateValue = input.value;
-
-        releaseDates.push({
-            content_id: contentId,
-            release_date: dateValue || null
-        });
-    });
-
-    try {
-        const res = await callApi('updateUserReleaseDate', {
-            token: adminToken,
-            userId: selectedPermissionUserId,
-            releaseDates: releaseDates
-        });
-
-        if (res.status === 'success') {
-            alert('發佈日期設定成功！');
-        } else {
-            alert('設定失敗: ' + res.message);
-        }
-    } catch (err) {
-        console.error('Save release dates error:', err);
-        alert('設定失敗');
-    }
-}
-
-function batchSetReleaseDate() {
-    const dateStr = prompt('請輸入要批量設定的日期（格式：YYYY-MM-DD）：');
-    if (!dateStr) return;
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-        alert('日期格式錯誤，請使用 YYYY-MM-DD 格式');
-        return;
-    }
-
-    const dateInputs = document.querySelectorAll('[id^="release-date-"]');
-    dateInputs.forEach(input => {
-        input.value = dateStr;
-    });
-
-    alert(`已將所有影片的發佈日期設為 ${dateStr}`);
-}
-
-function clearAllReleaseDates() {
-    if (!confirm('確定要清除所有發佈日期設定嗎？')) return;
-
-    const dateInputs = document.querySelectorAll('[id^="release-date-"]');
-    dateInputs.forEach(input => {
-        input.value = '';
-    });
-
-    alert('已清除所有發佈日期設定');
-}
-
-// ============================================
-// STATISTICS
-// ============================================
-
+// Stats
 async function loadStats() {
     try {
         const res = await callApi('getStats', { token: adminToken });
@@ -795,18 +636,14 @@ async function loadStats() {
     }
 }
 
-// ============================================
-// GLOBAL FUNCTIONS (for onclick handlers)
-// ============================================
-
+// Make functions global for onclick handlers
 window.viewUser = viewUser;
 window.editPermissions = editPermissions;
 window.deleteUser = deleteUser;
-window.showAddContentModal = showAddContentModal;
-window.editContent = editContent;
-window.closeContentModal = closeContentModal;
-window.saveContent = saveContent;
-window.deleteContent = deleteContent;
-window.saveReleaseDates = saveReleaseDates;
-window.batchSetReleaseDate = batchSetReleaseDate;
-window.clearAllReleaseDates = clearAllReleaseDates;
+window.saveContentTypes = saveContentTypes;
+window.editContent = function (contentId) {
+    alert('編輯內容功能開發中...');
+};
+
+// Initialize
+init();
